@@ -12,17 +12,20 @@ Person(uBD, "ДМ", "Сотрудник БЭК Депозиты")
 
 
 System_Boundary(bank, "Банк") {
+    
     Container_Boundary(dc1, "Датацентр 1"){
         System_Boundary(ib,"Интернет-банк new",""){
             System(api, "API Gateway", "nginx")
             System_Boundary(k8s, "k8s"){
                 System(msIb, "Микросервисы Депозиты","asp.net core")
-                System(msAbsAdapter,"Адаптер для АБС","asp.net core")
-              
             }
             System(msIbCache,"Кэш", "Redis")
         }
-        
+        System_Boundary(back,"Бэк-офис",""){
+            System_Boundary(k8sBack, "k8s"){
+                System(msAbsAdapter,"Адаптер для АБС","asp.net core")
+            }
+        }
         System(ebus,"Шина сообщений","kafka")
         System(legacyIb, "Действующий Интернет-банк","ASP.NET MVC")
     }
@@ -43,6 +46,7 @@ Rel(uBD, abs, "UC1.4")
 
 Rel(msIb, ebus,"mtls UC1.3,UC1.2, UC7.2, получение предложений и ставок")
 Rel(msIb, msIbCache, "Хранение предложений и ставок")
+
 Rel(msAbsAdapter, ebus, "mtls Вычитывание сообщений с возможной скоростью АБС (RateLimit)")
 Rel(msAbsAdapter, abs, "Отправка сообщений со скоростью, допустимой для АБС")
 Rel(abs,msAbsAdapter, "Публикация предложений, ставок")
